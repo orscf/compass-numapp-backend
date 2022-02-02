@@ -16,6 +16,7 @@ import { QuestionnaireController } from './QuestionnaireController';
 import { QueueController } from './QueueController';
 import { ParticipantController } from './ParticipantController';
 import { SubjectIdentitiesController } from './SubjectIdentitiesController';
+import { SdrApiInfoController } from './SdrApiInfoController';
 
 /**
  * Parent controller
@@ -45,6 +46,7 @@ import { SubjectIdentitiesController } from './SubjectIdentitiesController';
     new ParticipantController(),
     new QueueController(),
     new QuestionnaireController(),
-    new SubjectIdentitiesController()
+    new SubjectIdentitiesController(),
+    new SdrApiInfoController()
 ])
 export class ApiController {}
