@@ -1,3 +1,4 @@
+import { ParticipantEntry } from './../types/ParticipantEntry';
 /*
  * Copyright (c) 2021, IBM Deutschland GmbH
  */
@@ -40,5 +41,104 @@ export class SubjectIdentitiesModel {
             throw err;
         }
         return;
+    }
+
+    public async createStudyParticipant(studyParticipant: ParticipantEntry): Promise<void> {
+        try {
+            const pool: Pool = DB.getPool();
+            await pool.query(
+                'INSERT INTO studyparticipant(\
+                    subject_id,\
+                    current_questionnaire_id,\
+                    start_date,\
+                    due_date,\
+                    current_instance_id,\
+                    current_interval,\
+                    additional_iterations_left,\
+                    status,\
+                    general_study_end_date,\
+                    personal_study_end_date,\
+                    registration_token,\
+                    subject_uid,\
+                    actual_site_uid,\
+                    enrolling_site_uid,\
+                    actual_site_defined_patient_identifier\
+                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)',
+                [
+                    studyParticipant.subject_id,
+                    studyParticipant.current_questionnaire_id,
+                    studyParticipant.start_date,
+                    studyParticipant.due_date,
+                    studyParticipant.current_instance_id,
+                    studyParticipant.current_interval,
+                    studyParticipant.additional_iterations_left,
+                    studyParticipant.status,
+                    studyParticipant.general_study_end_date,
+                    studyParticipant.personal_study_end_date,
+                    null,
+                    studyParticipant.subject_uid,
+                    studyParticipant.actual_site_uid,
+                    studyParticipant.enrolling_site_uid,
+                    studyParticipant.actual_site_defined_patient_identifier
+                ]
+            );
+        } catch (err) {
+            Logger.Err(err);
+            throw err;
+        }
+    }
+
+    public async updateStudyParticipant(studyParticipant: ParticipantEntry): Promise<void> {
+        try {
+            const pool: Pool = DB.getPool();
+            await pool.query(
+                'UPDATE studyparticipant \
+                    set subject_id = $1,\
+                    current_questionnaire_id = $2,\
+                    start_date = $3,\
+                    due_date = $4,\
+                    current_instance_id = $5,\
+                    current_interval = $6,\
+                    additional_iterations_left = $7,\
+                    status = $8,\
+                    general_study_end_date = $9,\
+                    personal_study_end_date = $10,\
+                    registration_token = $11,\
+                    subject_uid = $12,\
+                    actual_site_uid = $13,\
+                    enrolling_site_uid = $14,\
+                    actual_site_defined_patient_identifier = $15 where subject_uid = $12',
+                [
+                    studyParticipant.subject_id,
+                    studyParticipant.current_questionnaire_id,
+                    studyParticipant.start_date,
+                    studyParticipant.due_date,
+                    studyParticipant.current_instance_id,
+                    studyParticipant.current_interval,
+                    studyParticipant.additional_iterations_left,
+                    studyParticipant.status,
+                    studyParticipant.general_study_end_date,
+                    studyParticipant.personal_study_end_date,
+                    null,
+                    studyParticipant.subject_uid,
+                    studyParticipant.actual_site_uid,
+                    studyParticipant.enrolling_site_uid,
+                    studyParticipant.actual_site_defined_patient_identifier
+                ]
+            );
+        } catch (err) {
+            Logger.Err(err);
+            throw err;
+        }
+    }
+
+    public async deleteStudyParticipant(subjectId: string): Promise<void> {
+        try {
+            const pool: Pool = DB.getPool();
+            await pool.query('DELETE FROM studyparticipant where subject_uid = $1', [subjectId]);
+        } catch (err) {
+            Logger.Err(err);
+            throw err;
+        }
     }
 }

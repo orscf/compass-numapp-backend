@@ -1,14 +1,10 @@
 import Logger from 'jet-logger';
 import { Request, Response } from 'express';
-import jwt from 'express-jwt';
 
-import { ClassMiddleware, Controller, Get } from '@overnightjs/core';
-import { AuthConfig } from '../config/AuthConfig';
-import { AuthorizationController } from './AuthorizationController';
+import { Controller, Get } from '@overnightjs/core';
 
 @Controller('sdrApiInfo')
 export class SdrApiInfoController {
-
     @Get('getApiVersion')
     public async getApiVersion(req: Request, resp: Response) {
         try {
@@ -19,7 +15,7 @@ export class SdrApiInfoController {
             return resp.status(200).json(returnObject);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({fault: 'true', return: error.message});
+            return resp.status(500).json({ fault: 'true', return: error.message });
         }
     }
 
@@ -33,7 +29,7 @@ export class SdrApiInfoController {
             return resp.status(200).json(returnObject);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({fault: 'true', return: error.message});
+            return resp.status(500).json({ fault: 'true', return: error.message });
         }
     }
 }
