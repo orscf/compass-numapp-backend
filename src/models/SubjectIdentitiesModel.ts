@@ -5,6 +5,8 @@ import { ParticipantEntry } from './../types/ParticipantEntry';
 import { Pool } from 'pg';
 import Logger from 'jet-logger';
 import DB from '../server/DB';
+import { SubjectSearchRequest } from '../types/sdr/SubjectSearchRequest';
+import { SubjectSearchResult } from '../types/sdr/SubjectSearchResult';
 
 export class SubjectIdentitiesModel {
     /**
@@ -60,10 +62,11 @@ export class SubjectIdentitiesModel {
                     personal_study_end_date,\
                     registration_token,\
                     subject_uid,\
+                    study_uid, \
                     actual_site_uid,\
                     enrolling_site_uid,\
                     actual_site_defined_patient_identifier\
-                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)',
+                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)',
                 [
                     studyParticipant.subject_id,
                     studyParticipant.current_questionnaire_id,
@@ -77,6 +80,7 @@ export class SubjectIdentitiesModel {
                     studyParticipant.personal_study_end_date,
                     null,
                     studyParticipant.subject_uid,
+                    studyParticipant.study_uid,
                     studyParticipant.actual_site_uid,
                     studyParticipant.enrolling_site_uid,
                     studyParticipant.actual_site_defined_patient_identifier
@@ -105,9 +109,10 @@ export class SubjectIdentitiesModel {
                     personal_study_end_date = $10,\
                     registration_token = $11,\
                     subject_uid = $12,\
-                    actual_site_uid = $13,\
-                    enrolling_site_uid = $14,\
-                    actual_site_defined_patient_identifier = $15 where subject_uid = $12',
+                    study_uid = $13, \
+                    actual_site_uid = $14,\
+                    enrolling_site_uid = $15,\
+                    actual_site_defined_patient_identifier = $16 where subject_uid = $12',
                 [
                     studyParticipant.subject_id,
                     studyParticipant.current_questionnaire_id,
@@ -121,6 +126,7 @@ export class SubjectIdentitiesModel {
                     studyParticipant.personal_study_end_date,
                     null,
                     studyParticipant.subject_uid,
+                    studyParticipant.study_uid,
                     studyParticipant.actual_site_uid,
                     studyParticipant.enrolling_site_uid,
                     studyParticipant.actual_site_defined_patient_identifier
@@ -136,6 +142,30 @@ export class SubjectIdentitiesModel {
         try {
             const pool: Pool = DB.getPool();
             await pool.query('DELETE FROM studyparticipant where subject_uid = $1', [subjectId]);
+        } catch (err) {
+            Logger.Err(err);
+            throw err;
+        }
+    }
+
+    public async searchParticipants(
+        searchRequest: SubjectSearchRequest
+    ): Promise<SubjectSearchResult[]> {
+        try {
+            const pool: Pool = DB.getPool();
+            const searchQuery = await pool.query(
+                'SELECT \
+                subject_uid AS "subjectUid", \
+                subject_id AS "subjectIdentifier", \
+                study_uid AS "studyUid", \
+                actual_site_uid AS "actualSiteUid", \
+                0 AS "isArchived", \
+                0 AS modiciationTimestampUtc \
+                FROM studyparticipant where \
+                    study_uid = $1',
+                [searchRequest.filter.studyUid]
+            );
+            return searchQuery.rows;
         } catch (err) {
             Logger.Err(err);
             throw err;

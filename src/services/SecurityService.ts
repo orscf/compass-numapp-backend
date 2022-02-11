@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 /*
  * Copyright (c) 2021, IBM Deutschland GmbH
  */
@@ -9,6 +10,7 @@ import Logger from 'jet-logger';
 
 import { COMPASSConfig } from '../config/COMPASSConfig';
 import { PerformanceLogger } from './PerformanceLogger';
+import env from 'env-var';
 
 /**
  * Encryption related logic.
@@ -168,5 +170,18 @@ export class SecurityService {
             salt,
             passwordHash
         };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    static secretCallback(req, payload, done) {
+        const result = env
+            .get('JWT_SECRET')
+            .default(randomBytes(256).toString('base64'))
+            .asString();
+        done(null, result);
+    }
+
+    static getJwtSecret(): string {
+        return env.get('JWT_SECRET').default(randomBytes(256).toString('base64')).asString();
     }
 }

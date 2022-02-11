@@ -1,16 +1,27 @@
+import { SecurityService } from './../../services/SecurityService';
 import { SdrMappingHelper } from './../../services/SdrMappingHelper';
 import { ParticipantEntry } from './../../types/ParticipantEntry';
 import { SubjectIdentitiesModel } from './../../models/SubjectIdentitiesModel';
 import { Subject } from './../../types/sdr/Subject';
 import Logger from 'jet-logger';
 import { Request, Response } from 'express';
-import { Controller, Post } from '@overnightjs/core';
+import { Controller, Post, Middleware } from '@overnightjs/core';
+import jwt from 'express-jwt';
+import { AuthorizationController } from '../AuthorizationController';
 
 @Controller('subjectSubmission')
 export class SubjectSubmissionController {
     private subjectIdentityModel: SubjectIdentitiesModel = new SubjectIdentitiesModel();
 
     @Post('importSubjects')
+    @Middleware(
+        jwt({
+            secret: SecurityService.secretCallback,
+            algorithms: ['HS256'],
+            requestProperty: 'payload',
+            isRevoked: AuthorizationController.checkOrscfAuthentication
+        })
+    )
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async importSubjects(req: Request, resp: Response) {
         try {

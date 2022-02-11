@@ -1,3 +1,4 @@
+import { validate } from 'uuid';
 /*
  * Copyright (c) 2021, IBM Deutschland GmbH
  */
@@ -14,6 +15,7 @@ import { AuthConfig } from '../config/AuthConfig';
 import { ApiUserModel } from '../models/ApiUserModel';
 import { ParticipantModel } from '../models/ParticipantModel';
 import { SecurityService } from '../services/SecurityService';
+import jwt from 'express-jwt';
 
 const MS_PER_MINUTE = 60000;
 
@@ -72,6 +74,25 @@ export class AuthorizationController {
             if (success) {
                 return done(null, false);
             } else return done({ name: 'UnauthorizedApiUser; Not found' }, true);
+        } catch (err) {
+            Logger.Err(err);
+            return done({ name: 'InternalError' }, true);
+        }
+    }
+
+    public static async checkOrscfAuthentication(
+        _req: Request,
+        payload: {
+            iss: string;
+        },
+        done: (err: { name: string }, revoked: boolean) => void
+    ) {
+        try {
+            if (payload.iss !== 'ECCT') {
+                return done({ name: 'Unauthorized' }, true);
+            } else {
+                return done(null, false);
+            }
         } catch (err) {
             Logger.Err(err);
             return done({ name: 'InternalError' }, true);

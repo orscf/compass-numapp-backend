@@ -5,7 +5,7 @@ import { ParticipationStatus } from './../ParticipantEntry';
 export interface Subject {
     subjectUid: string;
     subjectIdentifier: string;
-    study_uid;
+    studyUid: string;
     actualSiteUid: string;
     isArchived: true;
     modificationTimestampUtc: Date;
