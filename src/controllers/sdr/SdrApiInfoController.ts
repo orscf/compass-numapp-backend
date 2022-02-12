@@ -26,7 +26,7 @@ export class SdrApiInfoController {
         try {
             const returnObject = {
                 fault: '',
-                return: ['SubjectConsume, SubjectSubmission']
+                return: ['SdrApiInfo, SubjectConsume, SubjectSubmission']
             };
             return resp.status(200).json(returnObject);
         } catch (error) {
@@ -38,13 +38,10 @@ export class SdrApiInfoController {
     @Get('getPermittedAuthScopes')
     public async getPermittedAuthScopes(req: Request, resp: Response) {
         try {
-            const bearerHeader = req.headers.authorization;
-            const token: string = bearerHeader
-                ? bearerHeader.split(' ')[1]
-                : req.params && req.params.subjectID
-                ? req.params.subjectID
-                : undefined;
-            return resp.status(200).json(OrscfTokenService.getPermittedAuthScopes(token));
+            const authorizationHeader = req.headers.authorization;
+            return resp
+                .status(200)
+                .json(OrscfTokenService.getPermittedAuthScopes(authorizationHeader));
         } catch (error) {
             Logger.Err(error, true);
             return resp.status(500).json({ fault: 'true', return: error.message });

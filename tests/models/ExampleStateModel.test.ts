@@ -32,7 +32,12 @@ describe('signing', () => {
             additional_iterations_left: null,
             status: ParticipationStatus.OnStudy,
             general_study_end_date: undefined,
-            personal_study_end_date: undefined
+            personal_study_end_date: undefined,
+            subject_uid: null,
+            study_uid: null,
+            actual_site_uid: null,
+            enrolling_site_uid: null,
+            actual_site_defined_patient_identifier: null
         };
         const parameters: StateChangeTrigger = {};
 
@@ -74,7 +79,12 @@ describe('signing', () => {
             additional_iterations_left: 0,
             status: ParticipationStatus.OnStudy,
             general_study_end_date: new Date(),
-            personal_study_end_date: new Date()
+            personal_study_end_date: new Date(),
+            subject_uid: null,
+            study_uid: null,
+            actual_site_uid: null,
+            enrolling_site_uid: null,
+            actual_site_defined_patient_identifier: null
         };
         const parameters: StateChangeTrigger = {};
 
@@ -116,7 +126,12 @@ describe('signing', () => {
             additional_iterations_left: 0,
             status: ParticipationStatus.OnStudy,
             general_study_end_date: new Date(),
-            personal_study_end_date: new Date()
+            personal_study_end_date: new Date(),
+            subject_uid: null,
+            study_uid: null,
+            actual_site_uid: null,
+            enrolling_site_uid: null,
+            actual_site_defined_patient_identifier: null
         };
         const parameters: StateChangeTrigger = { basicTrigger: true };
 
@@ -160,7 +175,12 @@ describe('signing', () => {
             additional_iterations_left: 0,
             status: ParticipationStatus.OnStudy,
             general_study_end_date: new Date(),
-            personal_study_end_date: new Date()
+            personal_study_end_date: new Date(),
+            subject_uid: null,
+            study_uid: null,
+            actual_site_uid: null,
+            enrolling_site_uid: null,
+            actual_site_defined_patient_identifier: null
         };
         const parameters: StateChangeTrigger = { specialTrigger: true };
 

@@ -1,4 +1,3 @@
-import { validate } from 'uuid';
 /*
  * Copyright (c) 2021, IBM Deutschland GmbH
  */
@@ -15,7 +14,6 @@ import { AuthConfig } from '../config/AuthConfig';
 import { ApiUserModel } from '../models/ApiUserModel';
 import { ParticipantModel } from '../models/ParticipantModel';
 import { SecurityService } from '../services/SecurityService';
-import jwt from 'express-jwt';
 
 const MS_PER_MINUTE = 60000;
 

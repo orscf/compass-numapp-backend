@@ -1,27 +1,23 @@
-import { SecurityService } from './../../services/SecurityService';
+import { OrscfTokenService } from './../../services/OrscfTokenService';
 import { SdrMappingHelper } from './../../services/SdrMappingHelper';
 import { ParticipantEntry } from './../../types/ParticipantEntry';
 import { SubjectIdentitiesModel } from './../../models/SubjectIdentitiesModel';
 import { Subject } from './../../types/sdr/Subject';
 import Logger from 'jet-logger';
 import { Request, Response } from 'express';
-import { Controller, Post, Middleware } from '@overnightjs/core';
-import jwt from 'express-jwt';
-import { AuthorizationController } from '../AuthorizationController';
+import { Controller, Post, ClassMiddleware } from '@overnightjs/core';
 
 @Controller('subjectSubmission')
+@ClassMiddleware((req, res, next) =>
+    OrscfTokenService.authorizeOrscf(req, res, next, ['API:SubjectSubmission'])
+)
 export class SubjectSubmissionController {
     private subjectIdentityModel: SubjectIdentitiesModel = new SubjectIdentitiesModel();
 
     @Post('importSubjects')
-    @Middleware(
-        jwt({
-            secret: SecurityService.secretCallback,
-            algorithms: ['HS256'],
-            requestProperty: 'payload',
-            isRevoked: AuthorizationController.checkOrscfAuthentication
-        })
-    )
+    // @Middleware((req, res, next) =>
+    //     OrscfTokenService.authorizeOrscf(req, res, next, ['api:importSubjects'])
+    // )
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async importSubjects(req: Request, resp: Response) {
         try {
