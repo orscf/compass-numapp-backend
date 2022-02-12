@@ -1,5 +1,6 @@
 import { ParticipationStatus } from './../ParticipantEntry';
 export interface SubjectSearchRequest {
+    minTimestampUtc: Date;
     sortingField: string;
     sortDescending: boolean;
     filter: {

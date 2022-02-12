@@ -1,3 +1,4 @@
+import { Subject } from './../types/sdr/Subject';
 import { SdrMappingHelper } from './../services/SdrMappingHelper';
 import { ParticipantEntry } from './../types/ParticipantEntry';
 /*
@@ -19,6 +20,23 @@ export class SubjectIdentitiesModel {
             const pool: Pool = DB.getPool();
             const res = await pool.query('select * from studyparticipant where subject_id = $1', [
                 subjectID
+            ]);
+
+            if (res.rows.length !== 1) {
+                return false;
+            }
+            return true;
+        } catch (err) {
+            Logger.Err(err);
+            throw err;
+        }
+    }
+
+    public async getSubjectIdentityExistenceBySubjectUid(subjectUid: string): Promise<boolean> {
+        try {
+            const pool: Pool = DB.getPool();
+            const res = await pool.query('select * from studyparticipant where subject_uid = $1', [
+                subjectUid
             ]);
 
             if (res.rows.length !== 1) {
@@ -154,6 +172,39 @@ export class SubjectIdentitiesModel {
     ): Promise<SubjectSearchResult[]> {
         try {
             const pool: Pool = DB.getPool();
+
+            const minPeriodStartWhereClause =
+                searchRequest.filter.minPeriodStart === undefined
+                    ? ''
+                    : ` AND '${searchRequest.filter.minPeriodStart}' <= start_date`;
+
+            const maxPeriodStartWhereClause =
+                searchRequest.filter.maxPeriodStart === undefined
+                    ? ''
+                    : ` AND '${searchRequest.filter.maxPeriodStart}' >= start_date`;
+
+            const minPeriodEndWhereClause =
+                searchRequest.filter.minPeriodEnd === undefined
+                    ? ''
+                    : ` AND '${searchRequest.filter.minPeriodEnd}' <= personal_study_end_date`;
+
+            const maxPeriodEndWhereClause =
+                searchRequest.filter.maxPeriodEnd === undefined
+                    ? ''
+                    : ` AND '${searchRequest.filter.maxPeriodEnd}' >= personal_study_end_date`;
+
+            const changeDateWhereClause =
+                searchRequest.minTimestampUtc === undefined
+                    ? ''
+                    : ` AND '${searchRequest.minTimestampUtc}' <= last_action`;
+
+            const timeStampWhereClause =
+                minPeriodStartWhereClause +
+                maxPeriodStartWhereClause +
+                minPeriodEndWhereClause +
+                maxPeriodEndWhereClause +
+                changeDateWhereClause;
+
             const searchSql = `SELECT \
                 subject_uid AS "subjectUid", \
                 subject_id AS "subjectIdentifier", \
@@ -196,14 +247,55 @@ export class SubjectIdentitiesModel {
                         '${
                             searchRequest.filter.actualSiteDefinedPatientIdentifier
                         }' = actual_site_defined_patient_identifier\
-                    )
+                    ) ${timeStampWhereClause}
                 ORDER BY ${SdrMappingHelper.mapSdrSubjectPropnameToParticipantPropName(
                     searchRequest.sortingField
-                )} ${searchRequest.sortDescending ? ' DESC' : ''}`;
+                )} ${searchRequest.sortDescending ? ' DESC' : ''}\
+                LIMIT ${searchRequest.limitResults}`;
 
-            console.log('search', searchSql.trim().replace(/ +(?= )/g, ''));
             const searchQuery = await pool.query(searchSql);
             return searchQuery.rows;
+        } catch (err) {
+            Logger.Err(err);
+            throw err;
+        }
+    }
+
+    public async getSubjects(subjectUids: string[]): Promise<Subject[]> {
+        try {
+            const pool: Pool = DB.getPool();
+            let subjectUidsIn = '';
+            // TODO: Performance des womöglich großen where in ???
+            for (let i = 0; i < subjectUids.length; i++) {
+                const subjectUid: string = subjectUids[i];
+                subjectUidsIn += `'${subjectUid}'`;
+                if (i < subjectUids.length - 1) {
+                    subjectUidsIn += ',';
+                }
+            }
+
+            const getSubjetsQuery = await pool.query(
+                `SELECT \
+                    subject_uid AS "subjectUid", \
+                    subject_id AS "subjectIdentifier", \
+                    study_uid AS "studyUid", \
+                    actual_site_uid AS "actualSiteUid", \
+                    'false' AS "isArchived", \
+                    last_action AS "modificationTimestampUtc", \
+                    enrolling_site_uid AS "enrollingSiteUid", \
+                    status AS "status", \
+                    '' AS "statusNote", \
+                    start_date AS "periodStart", \
+                    personal_study_end_date AS "periodEnd", \
+                    '' AS "assignedArm", \
+                    '' AS "actualArm", \
+                    '' AS "substudyNames", \
+                    actual_site_defined_patient_identifier AS "actualSiteDefinedPatientIdentifier", \
+                    '' AS "customFields" \
+                FROM studyparticipant where subject_uid in (${subjectUidsIn}) \
+                `
+            );
+            return getSubjetsQuery.rows;
         } catch (err) {
             Logger.Err(err);
             throw err;
