@@ -23,4 +23,39 @@ export class SdrMappingHelper {
         };
         return result;
     }
+
+    public static mapSdrSubjectPropnameToParticipantPropName(sdrSubjectPropName: string): string {
+        switch (sdrSubjectPropName) {
+            case 'subjectIdentifier':
+                return 'subject_id';
+                break;
+            case 'modificationTimestampUtc':
+                return 'last_action';
+                break;
+            case 'periodStart':
+                return 'start_date';
+                break;
+            case 'periodEnd':
+                return 'personal_study_end_date';
+                break;
+            case 'studyUid':
+                return 'study_uid';
+                break;
+            case 'subjectUid':
+                return 'subject_uid';
+                break;
+            case 'actualSiteUid':
+                return 'actual_site_uid';
+                break;
+            case 'enrollingSiteUid':
+                return 'enrolling_site_uid';
+                break;
+            case 'actualSiteDefinitionPatientIdentifier':
+                return 'actual_site_defined_patient_identifier';
+                break;
+            default:
+                return sdrSubjectPropName;
+                break;
+        }
+    }
 }

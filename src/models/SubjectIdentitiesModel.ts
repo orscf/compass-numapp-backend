@@ -1,3 +1,4 @@
+import { SdrMappingHelper } from './../services/SdrMappingHelper';
 import { ParticipantEntry } from './../types/ParticipantEntry';
 /*
  * Copyright (c) 2021, IBM Deutschland GmbH
@@ -153,8 +154,7 @@ export class SubjectIdentitiesModel {
     ): Promise<SubjectSearchResult[]> {
         try {
             const pool: Pool = DB.getPool();
-            const searchQuery = await pool.query(
-                'SELECT \
+            const searchSql = `SELECT \
                 subject_uid AS "subjectUid", \
                 subject_id AS "subjectIdentifier", \
                 study_uid AS "studyUid", \
@@ -162,9 +162,47 @@ export class SubjectIdentitiesModel {
                 0 AS "isArchived", \
                 0 AS modiciationTimestampUtc \
                 FROM studyparticipant where \
-                    study_uid = $1',
-                [searchRequest.filter.studyUid]
-            );
+                    1 = 1 \
+                    And (\
+                        '${searchRequest.filter.studyUid}' = 'undefined' or \
+                        ('${searchRequest.filter.studyUid}' = 'null' and study_uid is null) or \
+                        '${searchRequest.filter.studyUid}' = study_uid\
+                    ) \
+                    And (\
+                        '${searchRequest.filter.siteUid}' = 'undefined' or \
+                        ('${
+                            searchRequest.filter.siteUid
+                        }' = 'null' and actual_site_uid is null) or \
+                        '${searchRequest.filter.siteUid}' = actual_site_uid\
+                    ) \
+                    And (\
+                        '${searchRequest.filter.subjectIdentifier}' = 'undefined' or \
+                        ('${
+                            searchRequest.filter.subjectIdentifier
+                        }' = 'null' and subject_id is null) or \
+                        '${searchRequest.filter.subjectIdentifier}' = subject_id\
+                    ) \
+                    And (\
+                        '${searchRequest.filter.status}' = 'undefined' or \
+                        '${searchRequest.filter.status}' = status\
+                    ) \
+                    And (\
+                        '${
+                            searchRequest.filter.actualSiteDefinedPatientIdentifier
+                        }' = 'undefined' or \
+                        ('${
+                            searchRequest.filter.actualSiteDefinedPatientIdentifier
+                        }' = 'null' and actual_site_defined_patient_identifier is null) or \
+                        '${
+                            searchRequest.filter.actualSiteDefinedPatientIdentifier
+                        }' = actual_site_defined_patient_identifier\
+                    )
+                ORDER BY ${SdrMappingHelper.mapSdrSubjectPropnameToParticipantPropName(
+                    searchRequest.sortingField
+                )} ${searchRequest.sortDescending ? ' DESC' : ''}`;
+
+            console.log('search', searchSql.trim().replace(/ +(?= )/g, ''));
+            const searchQuery = await pool.query(searchSql);
             return searchQuery.rows;
         } catch (err) {
             Logger.Err(err);

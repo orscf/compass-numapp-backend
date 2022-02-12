@@ -1,7 +1,7 @@
 import { ParticipationStatus } from './../ParticipantEntry';
 export interface SubjectSearchRequest {
     sortingField: string;
-    sortDescending: true;
+    sortDescending: boolean;
     filter: {
         studyUid: string;
         siteUid: string;
