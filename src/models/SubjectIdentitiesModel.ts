@@ -1,3 +1,5 @@
+import { SubjectBatchMutation } from './../types/sdr/SubjectBatchMutation';
+import { SubjectMutation } from './../types/sdr/SubjectMutation';
 import { Subject } from './../types/sdr/Subject';
 import { SdrMappingHelper } from './../services/SdrMappingHelper';
 import { ParticipantEntry } from './../types/ParticipantEntry';
@@ -154,6 +156,65 @@ export class SubjectIdentitiesModel {
         } catch (err) {
             Logger.Err(err);
             throw err;
+        }
+    }
+
+    public async updateSubject(
+        subjectUid: string,
+        subjectMutation: SubjectMutation
+    ): Promise<boolean> {
+        try {
+            const pool: Pool = DB.getPool();
+            const updateQuery = await pool.query(
+                'UPDATE studyparticipant SET \
+                    start_date = $1,\
+                    status = $2,\
+                    personal_study_end_date = $3,\
+                    actual_site_defined_patient_identifier = $4 \
+                WHERE subject_uid = $5 RETURNING subject_uid',
+                [
+                    subjectMutation.periodStart,
+                    subjectMutation.status,
+                    subjectMutation.periodEnd,
+                    subjectMutation.actualSiteDefinedPatientIdentifier,
+                    subjectUid
+                ]
+            );
+            return updateQuery.rows.length > 0;
+        } catch (error) {
+            Logger.Err(error);
+            throw error;
+        }
+    }
+
+    public async updateSubjects(
+        subjectUids: string[],
+        mutation: SubjectBatchMutation
+    ): Promise<string[]> {
+        try {
+            const pool: Pool = DB.getPool();
+            let subjectUidsIn = '';
+            // TODO: Performance des womöglich großen where in ???
+            for (let i = 0; i < subjectUids.length; i++) {
+                const subjectUid: string = subjectUids[i];
+                subjectUidsIn += `'${subjectUid}'`;
+                if (i < subjectUids.length - 1) {
+                    subjectUidsIn += ',';
+                }
+            }
+
+            const updateQuery = await pool.query(
+                `UPDATE studyparticipant SET \
+                    start_date = $1,\
+                    status = $2,\
+                    personal_study_end_date = $3\
+                WHERE subject_uid in (${subjectUidsIn}) RETURNING subject_uid`,
+                [mutation.periodStart, mutation.status, mutation.periodEnd]
+            );
+            return updateQuery.rows;
+        } catch (error) {
+            Logger.Err(error);
+            throw error;
         }
     }
 

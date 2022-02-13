@@ -1,3 +1,5 @@
+import { SubjectBatchMutation } from './../../types/sdr/SubjectBatchMutation';
+import { SubjectMutation } from './../../types/sdr/SubjectMutation';
 import { OrscfTokenService } from './../../services/OrscfTokenService';
 import { SdrMappingHelper } from './../../services/SdrMappingHelper';
 import { ParticipantEntry } from './../../types/ParticipantEntry';
@@ -84,6 +86,67 @@ export class SubjectSubmissionController {
             return resp.status(200).json({
                 fault: 'false',
                 archivedSubjectUids: archivedSubjectUids
+            });
+        } catch (error) {
+            Logger.Err(error, true);
+            return resp.status(500).json({ fault: 'true', return: error.message });
+        }
+    }
+
+    @Post('applySubjectMutations')
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    public async applySubjectMutations(req: Request, resp: Response) {
+        try {
+            const mutationsBySubjecttUid: { [subjectUid: string]: SubjectMutation } =
+                req.body.mutationsBySubjecttUid;
+            if (mutationsBySubjecttUid === undefined || mutationsBySubjecttUid === null) {
+                return resp.status(500).json({ fault: 'true', return: 'no subjects on request' });
+            }
+
+            const updatedSubjectUids: string[] = [];
+
+            for (const subjectUid in mutationsBySubjecttUid) {
+                const subjectMutation: SubjectMutation = mutationsBySubjecttUid[subjectUid];
+                const subjectWasUpdated: boolean = await this.subjectIdentityModel.updateSubject(
+                    subjectUid,
+                    subjectMutation
+                );
+                if (subjectWasUpdated) {
+                    updatedSubjectUids.push(subjectUid);
+                }
+            }
+
+            return resp.status(200).json({
+                updatedSubjectUids: updatedSubjectUids,
+                fault: 'false'
+            });
+        } catch (error) {
+            Logger.Err(error, true);
+            return resp.status(500).json({ fault: 'true', return: error.message });
+        }
+    }
+
+    @Post('applySubjectBatchMutation')
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    public async applySubjectBatchMutation(req: Request, resp: Response) {
+        try {
+            const subjectUids: string[] = req.body.subjectUids;
+            if (subjectUids === undefined || subjectUids === null) {
+                return resp.status(500).json({ fault: 'true', return: 'no subjects on request' });
+            }
+            const mutation: SubjectBatchMutation = req.body.mutation;
+            if (mutation === undefined || subjectUids === null) {
+                return resp.status(500).json({ fault: 'true', return: 'no mutation on request' });
+            }
+
+            const updatedSubjectUids: string[] = await this.subjectIdentityModel.updateSubjects(
+                subjectUids,
+                mutation
+            );
+
+            return resp.status(200).json({
+                updatedSubjectUids: updatedSubjectUids,
+                fault: 'false'
             });
         } catch (error) {
             Logger.Err(error, true);
