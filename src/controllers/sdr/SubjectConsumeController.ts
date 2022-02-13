@@ -1,12 +1,16 @@
+import { OrscfTokenService } from './../../services/OrscfTokenService';
 import { SubjectSearchResult } from './../../types/sdr/SubjectSearchResult';
 import { SubjectSearchRequest } from './../../types/sdr/SubjectSearchRequest';
 import { SubjectIdentitiesModel } from './../../models/SubjectIdentitiesModel';
 import Logger from 'jet-logger';
 import { Request, Response } from 'express';
-import { Controller, Post } from '@overnightjs/core';
+import { Controller, Post, ClassMiddleware } from '@overnightjs/core';
 import { Subject } from '../../types/sdr/Subject';
 
 @Controller('subjectConsume')
+@ClassMiddleware((req, res, next) =>
+    OrscfTokenService.authorizeOrscf(req, res, next, ['API:SubjectConsume'])
+)
 export class SubjectConsumeController {
     private subjectIdentityModel: SubjectIdentitiesModel = new SubjectIdentitiesModel();
 
@@ -105,6 +109,36 @@ export class SubjectConsumeController {
     @Post('getSubjectFields')
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async getSubjectFields(req: Request, resp: Response) {
+        try {
+            const subjectUids: string[] = req.body.subjectUids;
+
+            if (subjectUids === undefined || subjectUids === null || subjectUids.length === 0) {
+                return resp.status(200).json({
+                    unavailableSubjectUids: [],
+                    result: [],
+                    fault: 'false'
+                });
+            }
+            const result: Subject[] = await this.subjectIdentityModel.getSubjects(subjectUids);
+
+            const unavailableSubjectUids: string[] = subjectUids.filter(
+                (s) => result.map((r) => r.subjectUid).indexOf(s) < 0
+            );
+
+            return resp.status(200).json({
+                unavailableSubjectUids: unavailableSubjectUids,
+                result: result,
+                fault: 'false'
+            });
+        } catch (error) {
+            Logger.Err(error, true);
+            return resp.status(500).json({ fault: 'true', return: error.message });
+        }
+    }
+
+    @Post('exportSubjects')
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    public async exportSubjects(req: Request, resp: Response) {
         try {
             const subjectUids: string[] = req.body.subjectUids;
 
