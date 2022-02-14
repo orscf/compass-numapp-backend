@@ -1,6 +1,5 @@
 import { SubjectBatchMutation } from './../types/sdr/SubjectBatchMutation';
 import { SubjectMutation } from './../types/sdr/SubjectMutation';
-import { Subject } from './../types/sdr/Subject';
 import { SdrMappingHelper } from './../services/SdrMappingHelper';
 import { ParticipantEntry } from './../types/ParticipantEntry';
 /*
@@ -9,8 +8,8 @@ import { ParticipantEntry } from './../types/ParticipantEntry';
 import { Pool } from 'pg';
 import Logger from 'jet-logger';
 import DB from '../server/DB';
-import { SubjectSearchRequest } from '../types/sdr/SubjectSearchRequest';
-import { SubjectSearchResult } from '../types/sdr/SubjectSearchResult';
+import { SearchSubjectsRequest } from 'orscf-subjectdata-contract/dtos';
+import { SubjectFields, SubjectMetaRecord } from 'orscf-subjectdata-contract/models';
 
 export class SubjectIdentitiesModel {
     /**
@@ -87,7 +86,8 @@ export class SubjectIdentitiesModel {
                     actual_site_uid,\
                     enrolling_site_uid,\
                     actual_site_defined_patient_identifier\
-                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)',
+                    last_action\
+                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)',
                 [
                     studyParticipant.subject_id,
                     studyParticipant.current_questionnaire_id,
@@ -104,7 +104,8 @@ export class SubjectIdentitiesModel {
                     studyParticipant.study_uid,
                     studyParticipant.actual_site_uid,
                     studyParticipant.enrolling_site_uid,
-                    studyParticipant.actual_site_defined_patient_identifier
+                    studyParticipant.actual_site_defined_patient_identifier,
+                    studyParticipant.last_action
                 ]
             );
         } catch (err) {
@@ -229,8 +230,11 @@ export class SubjectIdentitiesModel {
     }
 
     public async searchParticipants(
-        searchRequest: SubjectSearchRequest
-    ): Promise<SubjectSearchResult[]> {
+        searchRequest: SearchSubjectsRequest,
+        minTimestampUtc: Date,
+        sortingField: string,
+        sortDescending: boolean
+    ): Promise<SubjectMetaRecord[]> {
         try {
             const pool: Pool = DB.getPool();
 
@@ -255,9 +259,7 @@ export class SubjectIdentitiesModel {
                     : ` AND '${searchRequest.filter.maxPeriodEnd}' >= personal_study_end_date`;
 
             const changeDateWhereClause =
-                searchRequest.minTimestampUtc === undefined
-                    ? ''
-                    : ` AND '${searchRequest.minTimestampUtc}' <= last_action`;
+                minTimestampUtc === undefined ? '' : ` AND '${minTimestampUtc}' <= last_action`;
 
             const timeStampWhereClause =
                 minPeriodStartWhereClause +
@@ -310,8 +312,8 @@ export class SubjectIdentitiesModel {
                         }' = actual_site_defined_patient_identifier\
                     ) ${timeStampWhereClause}
                 ORDER BY ${SdrMappingHelper.mapSdrSubjectPropnameToParticipantPropName(
-                    searchRequest.sortingField
-                )} ${searchRequest.sortDescending ? ' DESC' : ''}\
+                    sortingField
+                )} ${sortDescending ? ' DESC' : ''}\
                 LIMIT ${searchRequest.limitResults}`;
 
             const searchQuery = await pool.query(searchSql);
@@ -322,7 +324,7 @@ export class SubjectIdentitiesModel {
         }
     }
 
-    public async getSubjects(subjectUids: string[]): Promise<Subject[]> {
+    public async getSubjects(subjectUids: string[]): Promise<SubjectFields[]> {
         try {
             const pool: Pool = DB.getPool();
             let subjectUidsIn = '';

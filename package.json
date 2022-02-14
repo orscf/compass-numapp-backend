@@ -18,6 +18,7 @@
         "js-yaml": "^3.14.1",
         "jsonwebtoken": "^8.5.1",
         "jws": "^4.0.0",
+        "orscf-subjectdata-contract": "^1.8.0",
         "pg": "^8.5.1",
         "swagger-ui-express": "^4.1.6",
         "uuid": "^8.3.2"

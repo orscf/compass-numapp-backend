@@ -1,11 +1,25 @@
 import { OrscfTokenService } from './../../services/OrscfTokenService';
-import { SubjectSearchResult } from './../../types/sdr/SubjectSearchResult';
-import { SubjectSearchRequest } from './../../types/sdr/SubjectSearchRequest';
 import { SubjectIdentitiesModel } from './../../models/SubjectIdentitiesModel';
 import Logger from 'jet-logger';
 import { Request, Response } from 'express';
 import { Controller, Post, ClassMiddleware } from '@overnightjs/core';
-import { Subject } from '../../types/sdr/Subject';
+import {
+    CheckSubjectExisitenceRequest,
+    CheckSubjectExisitenceResponse,
+    ExportSubjectsRequest,
+    ExportSubjectsResponse,
+    GetSubjectFieldsRequest,
+    GetSubjectFieldsResponse,
+    SearchChangedSubjectsRequest,
+    SearchChangedSubjectsResponse,
+    SearchSubjectsRequest,
+    SearchSubjectsResponse
+} from 'orscf-subjectdata-contract/dtos';
+import {
+    SubjectFields,
+    SubjectMetaRecord,
+    SubjectStructure
+} from 'orscf-subjectdata-contract/models';
 
 @Controller('subjectConsume')
 @ClassMiddleware((req, res, next) =>
@@ -18,19 +32,23 @@ export class SubjectConsumeController {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async searchSubjects(req: Request, resp: Response) {
         try {
-            const searchRequest: SubjectSearchRequest = req.body;
+            const searchRequest: SearchSubjectsRequest = req.body;
             if (searchRequest === undefined || searchRequest === null) {
                 return resp.status(500).json({ fault: 'true', return: 'invalid search request' });
             }
 
-            const result: SubjectSearchResult[] = await this.subjectIdentityModel.searchParticipants(
-                searchRequest
+            const result: SubjectMetaRecord[] = await this.subjectIdentityModel.searchParticipants(
+                searchRequest,
+                undefined,
+                searchRequest.sortingField,
+                searchRequest.sortDescending
             );
 
-            return resp.status(200).json({
+            const response: SearchSubjectsResponse = {
                 fault: 'false',
                 result: result
-            });
+            };
+            return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
             return resp.status(500).json({ fault: 'true', return: error.message });
@@ -41,22 +59,27 @@ export class SubjectConsumeController {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async searchChangedSubjects(req: Request, resp: Response) {
         try {
-            const searchRequest: SubjectSearchRequest = req.body;
-            searchRequest.sortingField = 'last_action';
-            searchRequest.sortDescending = true;
+            const searchRequest: SearchChangedSubjectsRequest = req.body;
 
             if (searchRequest === undefined || searchRequest === null) {
                 return resp.status(500).json({ fault: 'true', return: 'invalid search request' });
             }
 
-            const result: SubjectSearchResult[] = await this.subjectIdentityModel.searchParticipants(
-                searchRequest
+            const result: SubjectMetaRecord[] = await this.subjectIdentityModel.searchParticipants(
+                searchRequest,
+                <Date>(<unknown>searchRequest.minTimestampUtc),
+                'last_action',
+                true
             );
 
-            return resp.status(200).json({
+            const response: SearchChangedSubjectsResponse = {
                 fault: 'false',
-                result: result
-            });
+                createdRecords: [], //TODO
+                modifiedRecords: result,
+                archivedRecords: [],
+                latestTimestampUtc: 0
+            };
+            return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
             return resp.status(500).json({ fault: 'true', return: error.message });
@@ -81,7 +104,8 @@ export class SubjectConsumeController {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async checkSubjectExistence(req: Request, resp: Response) {
         try {
-            const subjectUids: string[] = req.body.subjectUids;
+            const request: CheckSubjectExisitenceRequest = req.body;
+            const subjectUids: string[] = request.subjectUids;
             const unavailableSubjectUids: string[] = [];
             const availableSubjectUids: string[] = [];
 
@@ -95,11 +119,13 @@ export class SubjectConsumeController {
                     unavailableSubjectUids.push(subjectUid);
                 }
             }
-            return resp.status(200).json({
+            const response: CheckSubjectExisitenceResponse = {
                 unavailableSubjectUids: unavailableSubjectUids,
                 availableSubjectUids: availableSubjectUids,
                 fault: 'false'
-            });
+            };
+
+            return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
             return resp.status(500).json({ fault: 'true', return: error.message });
@@ -110,7 +136,8 @@ export class SubjectConsumeController {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async getSubjectFields(req: Request, resp: Response) {
         try {
-            const subjectUids: string[] = req.body.subjectUids;
+            const request: GetSubjectFieldsRequest = req.body;
+            const subjectUids: string[] = request.subjectUids;
 
             if (subjectUids === undefined || subjectUids === null || subjectUids.length === 0) {
                 return resp.status(200).json({
@@ -119,17 +146,19 @@ export class SubjectConsumeController {
                     fault: 'false'
                 });
             }
-            const result: Subject[] = await this.subjectIdentityModel.getSubjects(subjectUids);
+            const result: SubjectFields[] = await this.subjectIdentityModel.getSubjects(
+                subjectUids
+            );
 
             const unavailableSubjectUids: string[] = subjectUids.filter(
                 (s) => result.map((r) => r.subjectUid).indexOf(s) < 0
             );
-
-            return resp.status(200).json({
+            const response: GetSubjectFieldsResponse = {
                 unavailableSubjectUids: unavailableSubjectUids,
                 result: result,
                 fault: 'false'
-            });
+            };
+            return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
             return resp.status(500).json({ fault: 'true', return: error.message });
@@ -140,7 +169,8 @@ export class SubjectConsumeController {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async exportSubjects(req: Request, resp: Response) {
         try {
-            const subjectUids: string[] = req.body.subjectUids;
+            const request: ExportSubjectsRequest = req.body;
+            const subjectUids: string[] = request.subjectUids;
 
             if (subjectUids === undefined || subjectUids === null || subjectUids.length === 0) {
                 return resp.status(200).json({
@@ -149,17 +179,19 @@ export class SubjectConsumeController {
                     fault: 'false'
                 });
             }
-            const result: Subject[] = await this.subjectIdentityModel.getSubjects(subjectUids);
+            const result: SubjectStructure[] = await this.subjectIdentityModel.getSubjects(
+                subjectUids
+            );
 
             const unavailableSubjectUids: string[] = subjectUids.filter(
                 (s) => result.map((r) => r.subjectUid).indexOf(s) < 0
             );
-
-            return resp.status(200).json({
+            const response: ExportSubjectsResponse = {
                 unavailableSubjectUids: unavailableSubjectUids,
                 result: result,
                 fault: 'false'
-            });
+            };
+            return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
             return resp.status(500).json({ fault: 'true', return: error.message });

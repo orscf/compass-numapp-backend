@@ -5,12 +5,18 @@ import { Request, Response } from 'express';
 
 import { Controller, Get } from '@overnightjs/core';
 
+import {
+    GetCapabilitiesResponse,
+    GetApiVersionResponse,
+    GetPermittedAuthScopesResponse
+} from 'orscf-subjectdata-contract/dtos';
+
 @Controller('sdrApiInfo')
 export class SdrApiInfoController {
     @Get('getApiVersion')
     public async getApiVersion(req: Request, resp: Response) {
         try {
-            const returnObject = {
+            const returnObject: GetApiVersionResponse = {
                 fault: '',
                 return: '1.7.0'
             };
@@ -24,7 +30,7 @@ export class SdrApiInfoController {
     @Get('getCapabilities')
     public async getCapabilities(req: Request, resp: Response) {
         try {
-            const returnObject = {
+            const returnObject: GetCapabilitiesResponse = {
                 fault: '',
                 return: ['SdrApiInfo, SubjectConsume, SubjectSubmission']
             };
@@ -39,9 +45,10 @@ export class SdrApiInfoController {
     public async getPermittedAuthScopes(req: Request, resp: Response) {
         try {
             const authorizationHeader = req.headers.authorization;
-            return resp
-                .status(200)
-                .json(OrscfTokenService.getPermittedAuthScopes(authorizationHeader));
+            const result: GetPermittedAuthScopesResponse = OrscfTokenService.getPermittedAuthScopes(
+                authorizationHeader
+            );
+            return resp.status(200).json(result);
         } catch (error) {
             Logger.Err(error, true);
             return resp.status(500).json({ fault: 'true', return: error.message });
