@@ -34,7 +34,7 @@ export class SubjectConsumeController {
         try {
             const searchRequest: SearchSubjectsRequest = req.body;
             if (searchRequest === undefined || searchRequest === null) {
-                return resp.status(500).json({ fault: 'true', return: 'invalid search request' });
+                return resp.status(200).json({ fault: 'invalid search request', return: null });
             }
 
             const result: SubjectMetaRecord[] = await this.subjectIdentityModel.searchParticipants(
@@ -45,13 +45,13 @@ export class SubjectConsumeController {
             );
 
             const response: SearchSubjectsResponse = {
-                fault: 'false',
+                fault: null,
                 result: result
             };
             return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -62,7 +62,7 @@ export class SubjectConsumeController {
             const searchRequest: SearchChangedSubjectsRequest = req.body;
 
             if (searchRequest === undefined || searchRequest === null) {
-                return resp.status(500).json({ fault: 'true', return: 'invalid search request' });
+                return resp.status(200).json({ fault: 'invalid search request', return: null });
             }
 
             const result: SubjectMetaRecord[] = await this.subjectIdentityModel.searchParticipants(
@@ -73,7 +73,7 @@ export class SubjectConsumeController {
             );
 
             const response: SearchChangedSubjectsResponse = {
-                fault: 'false',
+                fault: null,
                 createdRecords: [], //TODO
                 modifiedRecords: result,
                 archivedRecords: [],
@@ -82,7 +82,7 @@ export class SubjectConsumeController {
             return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -91,12 +91,12 @@ export class SubjectConsumeController {
     public async getCustomFieldDescriptorsForSubject(req: Request, resp: Response) {
         try {
             return resp.status(200).json({
-                fault: 'false',
-                result: '???'
+                fault: null,
+                result: []
             });
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -122,13 +122,13 @@ export class SubjectConsumeController {
             const response: CheckSubjectExisitenceResponse = {
                 unavailableSubjectUids: unavailableSubjectUids,
                 availableSubjectUids: availableSubjectUids,
-                fault: 'false'
+                fault: null
             };
 
             return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -143,7 +143,7 @@ export class SubjectConsumeController {
                 return resp.status(200).json({
                     unavailableSubjectUids: [],
                     result: [],
-                    fault: 'false'
+                    fault: null
                 });
             }
             const result: SubjectFields[] = await this.subjectIdentityModel.getSubjects(
@@ -156,12 +156,12 @@ export class SubjectConsumeController {
             const response: GetSubjectFieldsResponse = {
                 unavailableSubjectUids: unavailableSubjectUids,
                 result: result,
-                fault: 'false'
+                fault: null
             };
             return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -176,7 +176,7 @@ export class SubjectConsumeController {
                 return resp.status(200).json({
                     unavailableSubjectUids: [],
                     result: [],
-                    fault: 'false'
+                    fault: null
                 });
             }
             const result: SubjectStructure[] = await this.subjectIdentityModel.getSubjects(
@@ -189,12 +189,12 @@ export class SubjectConsumeController {
             const response: ExportSubjectsResponse = {
                 unavailableSubjectUids: unavailableSubjectUids,
                 result: result,
-                fault: 'false'
+                fault: null
             };
             return resp.status(200).json(response);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 }

@@ -12,7 +12,7 @@ export class OrscfTokenService {
         if (authHeader === undefined || authHeader === null) {
             return {
                 authState: 0,
-                fault: 'false',
+                fault: null,
                 return: []
             };
         }
@@ -27,20 +27,20 @@ export class OrscfTokenService {
             const jwtPayload: JwtPayload = <JwtPayload>decodedToken;
             return {
                 authState: 1,
-                fault: 'false',
+                fault: null,
                 return: jwtPayload?.scp.split(' ')
             };
         } catch (error) {
             if (error instanceof TokenExpiredError) {
                 return {
                     authState: -1,
-                    fault: 'false',
+                    fault: null,
                     return: []
                 };
             } else {
                 return {
                     authState: -2,
-                    fault: 'false',
+                    fault: null,
                     return: []
                 };
             }
