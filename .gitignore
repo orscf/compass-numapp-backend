@@ -81,3 +81,4 @@ google-services.json
 # vs
 /.vs/ProjectSettings.json
 /.vs/slnx.sqlite
+/.vs/*
