@@ -1,3 +1,4 @@
+import { OrscfAuthConfig } from './../config/OrscfAuthConfig';
 import { randomBytes } from 'crypto';
 /*
  * Copyright (c) 2021, IBM Deutschland GmbH
@@ -52,6 +53,16 @@ export class SecurityService {
             return fs.readFileSync('./private_key.pem', 'utf8');
         } else {
             return privKey;
+        }
+    }
+
+    public static getOrscfPublicKeyOrSecretByIssuer(issuer: string): string {
+        const pubKey = OrscfAuthConfig.getOrscfPublicKeyOrSecretByIssuer(issuer);
+        if (pubKey === 'false') {
+            Logger.Err('Attention: Using public key from file');
+            return fs.readFileSync('./orscf_public_key.pem', 'utf8');
+        } else {
+            return pubKey;
         }
     }
 

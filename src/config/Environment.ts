@@ -2,6 +2,7 @@
  * Copyright (c) 2021, IBM Deutschland GmbH
  */
 import * as env from 'env-var';
+import Logger from 'jet-logger';
 
 /**
  * Environment related configuration.
@@ -44,6 +45,8 @@ export class Environment {
     }
 
     private static getStage(): string {
-        return env.get('NODE_ENV').default('development').asString();
+        const result = env.get('NODE_ENV').default('development').asString();
+        Logger.Info(`NODE_ENV from env.get = ${result}`);
+        return result;
     }
 }

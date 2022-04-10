@@ -5,6 +5,7 @@ import jwt, { TokenExpiredError } from 'jsonwebtoken';
 
 interface JwtPayload {
     scp: string;
+    scope: string[];
     iss: string;
 }
 export class OrscfTokenService {
@@ -21,8 +22,9 @@ export class OrscfTokenService {
             : authHeader;
 
         try {
+            const allowedIssuers: string[] = OrscfAuthConfig.getAllowedIssuers();
             const decodedToken = jwt.verify(bearerToken, SecurityService.getJwtSecret(), {
-                issuer: 'ECCT'
+                issuer: allowedIssuers
             });
             const jwtPayload: JwtPayload = <JwtPayload>decodedToken;
             return {
@@ -57,10 +59,17 @@ export class OrscfTokenService {
             : authHeader;
 
         try {
-            const decodedToken = jwt.verify(bearerToken, SecurityService.getJwtSecret(), {
-                issuer: 'ECCT'
-            });
+            const decodedToken = jwt.decode(bearerToken);
             const jwtPayload: JwtPayload = <JwtPayload>decodedToken;
+
+            jwt.verify(
+                bearerToken,
+                SecurityService.getOrscfPublicKeyOrSecretByIssuer(jwtPayload.iss),
+                {
+                    algorithms: ['HS256', 'RS256']
+                }
+            );
+
             const allowedIssuers: string[] = OrscfAuthConfig.getAllowedIssuers();
             if (allowedIssuers.indexOf('*') < 0 && allowedIssuers.indexOf(jwtPayload.iss) < 0) {
                 return res
@@ -69,12 +78,15 @@ export class OrscfTokenService {
                         "'Authorization'-Header contains an invalid bearer token (invalid issuer)!"
                     );
             }
+
             const allowedHosts: string[] = OrscfAuthConfig.getAllowedHosts();
             const host: string = req.hostname.toLowerCase();
             if (allowedHosts.indexOf('*') < 0 && allowedHosts.indexOf(host) < 0) {
                 return res.status(401).send('access denied by firewall rules');
             }
-            const grantedPermissions: string[] = jwtPayload.scp.split(';');
+
+            const grantedPermissions: string[] = jwtPayload.scope;
+            requiredExplicitPermissions.push('Study:' + OrscfAuthConfig.getStudyUid());
             if (requiredExplicitPermissions !== undefined && requiredExplicitPermissions !== null) {
                 requiredExplicitPermissions.forEach((requiredPermission) => {
                     if (grantedPermissions.indexOf(requiredPermission) < 0) {
@@ -86,7 +98,10 @@ export class OrscfTokenService {
         } catch (error) {
             return res
                 .status(401)
-                .send("'Authorization'-Header contains an invalid bearer token (decode failure)!");
+                .send(
+                    "'Authorization'-Header contains an invalid bearer token (decode failure ex)!" +
+                        error
+                );
         }
 
         //
