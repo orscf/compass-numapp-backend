@@ -3,7 +3,7 @@ import { OrscfTokenService } from './../../services/OrscfTokenService';
 import Logger from 'jet-logger';
 import { Request, Response } from 'express';
 
-import { Controller, Get } from '@overnightjs/core';
+import { Controller, Post } from '@overnightjs/core';
 
 import {
     GetCapabilitiesResponse,
@@ -13,35 +13,35 @@ import {
 
 @Controller('sdrApiInfo')
 export class SdrApiInfoController {
-    @Get('getApiVersion')
+    @Post('getApiVersion')
     public async getApiVersion(req: Request, resp: Response) {
         try {
             const returnObject: GetApiVersionResponse = {
-                fault: '',
+                fault: null,
                 return: '1.7.0'
             };
             return resp.status(200).json(returnObject);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
-    @Get('getCapabilities')
+    @Post('getCapabilities')
     public async getCapabilities(req: Request, resp: Response) {
         try {
             const returnObject: GetCapabilitiesResponse = {
-                fault: '',
-                return: ['SdrApiInfo, SubjectConsume, SubjectSubmission']
+                fault: null,
+                return: ['SdrApiInfo', 'SubjectConsume', 'SubjectSubmission']
             };
             return resp.status(200).json(returnObject);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
-    @Get('getPermittedAuthScopes')
+    @Post('getPermittedAuthScopes')
     public async getPermittedAuthScopes(req: Request, resp: Response) {
         try {
             const authorizationHeader = req.headers.authorization;
@@ -51,7 +51,7 @@ export class SdrApiInfoController {
             return resp.status(200).json(result);
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 }

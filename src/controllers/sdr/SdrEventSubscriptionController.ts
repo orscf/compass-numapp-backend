@@ -1,16 +1,16 @@
 // import Logger from 'jet-logger';
 // import { Request, Response } from 'express';
-// import { Controller, Get } from '@overnightjs/core';
+// import { Controller, Post } from '@overnightjs/core';
 
 // @Controller('sdrEventSubscription')
 // export class SdrEventSubscriptionController {
-//     @Get('subscribeForChangedSubjects')
+//     @Post('subscribeForChangedSubjects')
 //     public async subscribeForChangedSubjects(req: Request, resp: Response) {
 //         try {
-//             return resp.status(200).json({ fault: 'false', message: 'not yet implemented' });
+//             return resp.status(200).json({ fault: 'not yet implemented', return: null });
 //         } catch (error) {
 //             Logger.Err(error, true);
-//             return resp.status(500).json({ fault: 'true', return: error.message });
+//             return resp.status(200).json({ fault: error.message, return: null });
 //         }
 //     }
 // }

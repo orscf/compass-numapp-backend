@@ -25,7 +25,7 @@ export class SubjectSubmissionController {
         try {
             const subjects: Subject[] = req.body.subjects;
             if (subjects === undefined || subjects === null) {
-                return resp.status(500).json({ fault: 'true', return: 'no subjects on request' });
+                return resp.status(200).json({ fault: 'no subjects on request', return: null });
             }
 
             const createdSubjectUids: string[] = [];
@@ -48,13 +48,13 @@ export class SubjectSubmissionController {
             }
 
             return resp.status(200).json({
-                fault: 'false',
+                fault: null,
                 createdSubjectUids: createdSubjectUids,
                 updatedSubjectUids: updatedSubjectUids
             });
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -64,7 +64,7 @@ export class SubjectSubmissionController {
         try {
             const subjectUids: string[] = req.body.subjectUids;
             if (subjectUids === undefined || subjectUids === null) {
-                return resp.status(500).json({ fault: 'true', return: 'no subjects on request' });
+                return resp.status(200).json({ fault: 'no subjects on request', return: null });
             }
 
             const archivedSubjectUids: string[] = [];
@@ -74,7 +74,7 @@ export class SubjectSubmissionController {
                     subjectUid
                 );
                 if (!subjectIdentityExistence) {
-                    return resp.status(404).json({ fault: 'true', return: 'subject not found' });
+                    return resp.status(200).json({ fault: 'subject not found', return: null });
                 }
             }
 
@@ -84,12 +84,12 @@ export class SubjectSubmissionController {
             }
 
             return resp.status(200).json({
-                fault: 'false',
+                fault: null,
                 archivedSubjectUids: archivedSubjectUids
             });
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -100,7 +100,7 @@ export class SubjectSubmissionController {
             const mutationsBySubjecttUid: { [subjectUid: string]: SubjectMutation } =
                 req.body.mutationsBySubjecttUid;
             if (mutationsBySubjecttUid === undefined || mutationsBySubjecttUid === null) {
-                return resp.status(500).json({ fault: 'true', return: 'no subjects on request' });
+                return resp.status(200).json({ fault: 'no subjects on request', return: null });
             }
 
             const updatedSubjectUids: string[] = [];
@@ -118,11 +118,11 @@ export class SubjectSubmissionController {
 
             return resp.status(200).json({
                 updatedSubjectUids: updatedSubjectUids,
-                fault: 'false'
+                fault: null
             });
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ fault: error.message, return: null });
         }
     }
 
@@ -132,11 +132,11 @@ export class SubjectSubmissionController {
         try {
             const subjectUids: string[] = req.body.subjectUids;
             if (subjectUids === undefined || subjectUids === null) {
-                return resp.status(500).json({ fault: 'true', return: 'no subjects on request' });
+                return resp.status(200).json({ fault: 'no subjects on request', return: null });
             }
             const mutation: SubjectBatchMutation = req.body.mutation;
             if (mutation === undefined || subjectUids === null) {
-                return resp.status(500).json({ fault: 'true', return: 'no mutation on request' });
+                return resp.status(200).json({ fault: 'no mutation on request', return: null });
             }
 
             const updatedSubjectUids: string[] = await this.subjectIdentityModel.updateSubjects(
@@ -146,11 +146,11 @@ export class SubjectSubmissionController {
 
             return resp.status(200).json({
                 updatedSubjectUids: updatedSubjectUids,
-                fault: 'false'
+                fault: null
             });
         } catch (error) {
             Logger.Err(error, true);
-            return resp.status(500).json({ fault: 'true', return: error.message });
+            return resp.status(200).json({ faule: error.message, return: null });
         }
     }
 }
