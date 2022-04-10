@@ -22,15 +22,26 @@ export class OrscfTokenService {
             : authHeader;
 
         try {
-            const allowedIssuers: string[] = OrscfAuthConfig.getAllowedIssuers();
-            const decodedToken = jwt.verify(bearerToken, SecurityService.getJwtSecret(), {
-                issuer: allowedIssuers
-            });
+            const decodedToken = jwt.decode(bearerToken);
             const jwtPayload: JwtPayload = <JwtPayload>decodedToken;
+            const allowedIssuers: string[] = OrscfAuthConfig.getAllowedIssuers();
+
+            jwt.verify(
+                bearerToken,
+                SecurityService.getOrscfPublicKeyOrSecretByIssuer(jwtPayload.iss),
+                {
+                    algorithms: ['HS256', 'RS256']
+                }
+            );
+
+            if (allowedIssuers.indexOf('*') < 0 && allowedIssuers.indexOf(jwtPayload.iss) < 0) {
+                throw 'invalid issuer';
+            }
+
             return {
                 authState: 1,
                 fault: 'false',
-                return: jwtPayload?.scp.split(' ')
+                return: jwtPayload?.scope
             };
         } catch (error) {
             if (error instanceof TokenExpiredError) {
